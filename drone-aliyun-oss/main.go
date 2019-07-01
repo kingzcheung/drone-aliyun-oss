@@ -51,7 +51,7 @@ func main() {
 		cli.StringFlag{
 			Name:   "oss.dir",
 			Usage:  "OSS DIR",
-			EnvVar: "PLUGIN_dir",
+			EnvVar: "PLUGIN_DIR",
 		},
 	}
 	app.Action = run
