@@ -12,6 +12,7 @@
       access_key_secret: *
       bucket_name: test_name
       dir: test
+      file_format: mogo_{{date}}_{{md5}}.tar.gz
 ```
 
 ### Plugin Parameter Reference
@@ -41,3 +42,11 @@ Bucket，必填
 `dir`(string):
 
 存放的二级目录，可选
+
+`file_format`(string):
+
+上传后的文件名格式，可选：
+
+如果为空，默认取的是`local_file`；
+
+`{{date}}`,除了date之外，还有 `md5`可选

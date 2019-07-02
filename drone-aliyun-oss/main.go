@@ -53,6 +53,11 @@ func main() {
 			Usage:  "OSS DIR",
 			EnvVar: "PLUGIN_DIR",
 		},
+		cli.StringFlag{
+			Name:   "oss.file_format",
+			Usage:  "OSS File Format",
+			EnvVar: "PLUGIN_FILE_FORMAT",
+		},
 	}
 	app.Action = run
 
@@ -70,8 +75,14 @@ func run(c *cli.Context) {
 			AccessKeySecret: c.String("oss.access_key_secret"),
 			BucketName:      c.String("oss.bucket_name"),
 			Dir:             c.String("oss.dir"),
+			FileFormat:      c.String("oss.file_format"),
 		},
 	}
 	err := plugin.Exec()
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("Upload Success")
+
 }

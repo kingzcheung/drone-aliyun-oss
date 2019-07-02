@@ -1,11 +1,11 @@
 package drone_aliyun_oss
 
 import (
+	"drone-aliyun-oss/utils"
 	"errors"
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"strings"
-	"time"
 )
 
 type Plugin struct {
@@ -18,6 +18,7 @@ type OSS struct {
 	AccessKeySecret string
 	BucketName      string
 	Dir             string
+	FileFormat      string
 }
 
 func (p *Plugin) check() error {
@@ -61,11 +62,21 @@ func (p *Plugin) Exec() error {
 	if err != nil {
 		return err
 	}
-	name := time.Now().Format("20060102150405")
-	objectKey := fmt.Sprintf("%s/%s.tar.gz", p.OSS.Dir, name)
+	name := p.FileName()
+
+	objectKey := fmt.Sprintf("%s/%s", p.OSS.Dir, name)
 	if p.OSS.Dir == "" {
 		objectKey = strings.TrimLeft(objectKey, "/")
 	}
 	return bucket.PutObjectFromFile(objectKey, p.LocalFile)
 	//return err
+}
+
+func (p *Plugin) FileName() string {
+	if p.OSS.FileFormat == "" {
+		f := strings.Split(p.LocalFile, "/")
+		return f[len(f)-1]
+	}
+
+	return utils.Replace(p.OSS.FileFormat)
 }
