@@ -12,7 +12,7 @@
       access_key_secret: *
       bucket_name: test_name
       dir: test
-      file_format: mogo_{{date}}_{{md5}}.tar.gz
+      file_format: mogo_{{date|2006-01-02}}_{{md5}}.tar.gz
 ```
 
 ### Plugin Parameter Reference
@@ -49,4 +49,4 @@ Bucket，必填
 
 如果为空，默认取的是`local_file`；
 
-`{{date}}`,除了date之外，还有 `md5`可选
+`{{date|2006-01-02}}`,date需要一个golang版本的日期格式除了date之外，还有 `md5`可选
