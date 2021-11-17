@@ -5,7 +5,7 @@
 ```yaml
     ...
   - name: publish oss
-    image: bbking/drone-aliyun-oss
+    image: ghcr.io/kingzcheung/drone-aliyun-oss:master
     settings:
       local_file: dist.tar.gz
       endpoint: http://oss-cn-*.aliyuncs.com
