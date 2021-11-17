@@ -54,9 +54,9 @@ func main() {
 			EnvVar: "PLUGIN_DIR",
 		},
 		cli.StringFlag{
-			Name:   "oss.file_format",
-			Usage:  "OSS File Format",
-			EnvVar: "PLUGIN_FILE_FORMAT",
+			Name:   "oss.object_name",
+			Usage:  "OSS Object Name",
+			EnvVar: "PLUGIN_OBJECT_NAME",
 		},
 	}
 	app.Action = run
@@ -75,7 +75,7 @@ func run(c *cli.Context) {
 			AccessKeySecret: c.String("oss.access_key_secret"),
 			BucketName:      c.String("oss.bucket_name"),
 			Dir:             c.String("oss.dir"),
-			FileFormat:      c.String("oss.file_format"),
+			ObjectName:      c.String("oss.object_name"),
 		},
 	}
 	err := plugin.Exec()

@@ -1,11 +1,15 @@
 package drone_aliyun_oss
 
 import (
-	"drone-aliyun-oss/utils"
+	"bytes"
 	"errors"
-	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"os"
+	"path"
+	"regexp"
 	"strings"
+	"text/template"
+	"time"
 )
 
 type Plugin struct {
@@ -18,7 +22,7 @@ type OSS struct {
 	AccessKeySecret string
 	BucketName      string
 	Dir             string
-	FileFormat      string
+	ObjectName      string
 }
 
 func (p *Plugin) check() error {
@@ -64,7 +68,8 @@ func (p *Plugin) Exec() error {
 	}
 	name := p.FileName()
 
-	objectKey := fmt.Sprintf("%s/%s", p.OSS.Dir, name)
+	objectKey := path.Join(p.OSS.Dir, name)
+
 	if p.OSS.Dir == "" {
 		objectKey = strings.TrimLeft(objectKey, "/")
 	}
@@ -73,10 +78,47 @@ func (p *Plugin) Exec() error {
 }
 
 func (p *Plugin) FileName() string {
-	if p.OSS.FileFormat == "" {
+	if p.OSS.ObjectName == "" {
 		f := strings.Split(p.LocalFile, "/")
 		return f[len(f)-1]
 	}
 
-	return utils.Replace(p.OSS.FileFormat)
+	if isTemplateName(p.OSS.ObjectName) {
+		commitRef := os.Getenv("DRONE_COMMIT_REF")
+		repoBranch := os.Getenv("DRONE_REPO_BRANCH")
+		if UseDefaultTag(commitRef, repoBranch) {
+			repoTag, err := DefaultTag(commitRef)
+			if err != nil {
+				return p.OSS.ObjectName
+			}
+			return renderName(p.OSS.ObjectName, repoTag, func() time.Time {
+				return time.Now()
+			})
+		}
+		return p.OSS.ObjectName
+	}
+
+	return p.OSS.ObjectName
+}
+
+func isTemplateName(name string) bool {
+	reg := regexp.MustCompile(`{{.*}}`)
+	all := reg.FindAllString(name, -1)
+	return len(all) > 0
+}
+
+func renderName(name string, repoTag string, fn func() time.Time) string {
+	tmpl, err := template.New("file_name").Parse(name)
+	if err != nil {
+		return name
+	}
+	var bf bytes.Buffer
+	err = tmpl.Execute(&bf, map[string]interface{}{
+		"date": fn(),
+		"tag":  repoTag,
+	})
+	if err != nil {
+		return name
+	}
+	return bf.String()
 }

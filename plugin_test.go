@@ -1,39 +1,76 @@
 package drone_aliyun_oss
 
 import (
-	"drone-aliyun-oss/utils"
-	"fmt"
-	"github.com/stretchr/testify/assert"
-	"regexp"
 	"testing"
+	"time"
 )
 
-func TestPlugin_FileName(t *testing.T) {
-	as := assert.New(t)
-	plugin := &Plugin{
-		LocalFile: "dist.tar.gz",
-		OSS: OSS{
-			FileFormat: "test_{{date|2006-01-02}}.tar.gz",
+func Test_renderName(t *testing.T) {
+	var testDate = "2021-11-17"
+	type args struct {
+		name    string
+		repoTag string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "format date",
+			args: args{
+				name:    "foo_{{ .date.Format \"2006-01-02\" }}.tar.gz",
+				repoTag: "master",
+			},
+			want: "foo_2021-11-17.tar.gz",
+		},
+		{
+			name: "format branch master",
+			args: args{
+				name:    "foo_{{ .tag }}.tar.gz",
+				repoTag: "master",
+			},
+			want: "foo_master.tar.gz",
+		},
+		{
+			name: "format tag",
+			args: args{
+				name:    "foo_{{ .tag }}.tar.gz",
+				repoTag: "1.0.0",
+			},
+			want: "foo_1.0.0.tar.gz",
 		},
 	}
-
-	as.Equal(plugin.FileName(), "test_2019-07-02.tar.gz")
-}
-
-func TestPlugin_FileName2(t *testing.T) {
-	str := "test_{{date|2006-01-02}}.tar.gz"
-	re := regexp.MustCompile(utils.FormatRE)
-	fmt.Println(re.FindAllString(str, -1))
-}
-
-func TestPlugin_FileName3(t *testing.T) {
-	as := assert.New(t)
-	plugin := &Plugin{
-		LocalFile: "dist.tar.gz",
-		OSS: OSS{
-			FileFormat: "test_2006.tar.gz",
-		},
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := renderName(tt.args.name, tt.args.repoTag, func() time.Time {
+				date, _ := time.Parse("2006-01-02", testDate)
+				return date
+			}); got != tt.want {
+				t.Errorf("renderName() = %v, want %v", got, tt.want)
+			}
+		})
 	}
+}
 
-	as.Equal(plugin.FileName(), "test_2006.tar.gz")
+func Test_isTemplateName(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"", args{name: "foo_{{.tag}}.tar.gz"}, true},
+		{"", args{name: "foo_{{.tag.tar.gz"}, false},
+		{"", args{name: "foo_bar.tag.tar.gz"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isTemplateName(tt.args.name); got != tt.want {
+				t.Errorf("isTemplateName() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
