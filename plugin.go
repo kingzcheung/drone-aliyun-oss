@@ -71,7 +71,8 @@ func (p *Plugin) Exec() error {
 		return err
 	}
 	name := p.FileName()
-
+	log.Printf("Info: FileName=%s\n", name)
+	log.Printf("Info: commitRef=%s,repoBranch=%s\n", commitRef, repoBranch)
 	objectKey := path.Join(p.OSS.Dir, name)
 
 	if p.OSS.Dir == "" {
@@ -86,7 +87,6 @@ func (p *Plugin) FileName() string {
 		f := strings.Split(p.LocalFile, "/")
 		return f[len(f)-1]
 	}
-
 	if isTemplateName(p.OSS.ObjectName) {
 		if UseDefaultTag(commitRef, repoBranch) {
 			return renderName(p.OSS.ObjectName, func() time.Time {
