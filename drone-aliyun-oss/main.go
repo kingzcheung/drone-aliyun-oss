@@ -2,7 +2,6 @@ package main
 
 import (
 	dronealiyunoss "drone-aliyun-oss"
-	"fmt"
 	"github.com/urfave/cli"
 	"log"
 	"os"
@@ -80,9 +79,9 @@ func run(c *cli.Context) {
 	}
 	err := plugin.Exec()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("Run Error: %v", err)
+		return
 	}
 
-	fmt.Println("Upload Success")
-
+	log.Println("Upload Success")
 }
