@@ -1,6 +1,7 @@
 package drone_aliyun_oss
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -20,7 +21,7 @@ func Test_renderName(t *testing.T) {
 			name: "format date",
 			args: args{
 				name:    "foo_{{ .date.Format \"2006-01-02\" }}.tar.gz",
-				repoTag: "master",
+				repoTag: "refs/heads/master",
 			},
 			want: "foo_2021-11-17.tar.gz",
 		},
@@ -28,22 +29,23 @@ func Test_renderName(t *testing.T) {
 			name: "format branch master",
 			args: args{
 				name:    "foo_{{ .tag }}.tar.gz",
-				repoTag: "master",
+				repoTag: "refs/heads/master",
 			},
-			want: "foo_master.tar.gz",
+			want: "foo_latest.tar.gz",
 		},
 		{
 			name: "format tag",
 			args: args{
 				name:    "foo_{{ .tag }}.tar.gz",
-				repoTag: "1.0.0",
+				repoTag: "refs/tags/v1.0.0",
 			},
 			want: "foo_1.0.0.tar.gz",
 		},
 	}
 	for _, tt := range tests {
+		os.Setenv("DRONE_COMMIT_REF", tt.args.repoTag)
 		t.Run(tt.name, func(t *testing.T) {
-			if got := renderName(tt.args.name, tt.args.repoTag, func() time.Time {
+			if got := renderName(tt.args.name, func() time.Time {
 				date, _ := time.Parse("2006-01-02", testDate)
 				return date
 			}); got != tt.want {

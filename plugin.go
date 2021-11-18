@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-var commitRef = os.Getenv("DRONE_COMMIT_REF")
-
 type Plugin struct {
 	OSS       OSS
 	LocalFile string
@@ -71,7 +69,7 @@ func (p *Plugin) Exec() error {
 	}
 	name := p.FileName()
 	log.Printf("Info: FileName=%s\n", name)
-	log.Printf("Info: commitRef=%s\n", commitRef)
+	log.Printf("Info: commitRef=%s\n", os.Getenv("DRONE_COMMIT_REF"))
 	objectKey := path.Join(p.OSS.Dir, name)
 
 	if p.OSS.Dir == "" {
@@ -102,7 +100,7 @@ func isTemplateName(name string) bool {
 }
 
 func renderName(tmplString string, fn func() time.Time) string {
-	repoTag, err := DefaultTag(commitRef)
+	repoTag, err := DefaultTag(os.Getenv("DRONE_COMMIT_REF"))
 	if err != nil {
 		log.Println("Warning: ", err)
 		repoTag = ""
