@@ -14,7 +14,6 @@ import (
 )
 
 var commitRef = os.Getenv("DRONE_COMMIT_REF")
-var repoBranch = os.Getenv("DRONE_REPO_BRANCH")
 
 type Plugin struct {
 	OSS       OSS
@@ -72,7 +71,7 @@ func (p *Plugin) Exec() error {
 	}
 	name := p.FileName()
 	log.Printf("Info: FileName=%s\n", name)
-	log.Printf("Info: commitRef=%s,repoBranch=%s\n", commitRef, repoBranch)
+	log.Printf("Info: commitRef=%s\n", commitRef)
 	objectKey := path.Join(p.OSS.Dir, name)
 
 	if p.OSS.Dir == "" {
@@ -88,12 +87,9 @@ func (p *Plugin) FileName() string {
 		return f[len(f)-1]
 	}
 	if isTemplateName(p.OSS.ObjectName) {
-		if UseDefaultTag(commitRef, repoBranch) {
-			return renderName(p.OSS.ObjectName, func() time.Time {
-				return time.Now()
-			})
-		}
-		return p.OSS.ObjectName
+		return renderName(p.OSS.ObjectName, func() time.Time {
+			return time.Now()
+		})
 	}
 
 	return p.OSS.ObjectName
