@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"log"
 	"os"
 	"path"
 	"regexp"
@@ -11,6 +12,9 @@ import (
 	"text/template"
 	"time"
 )
+
+var commitRef = os.Getenv("DRONE_COMMIT_REF")
+var repoBranch = os.Getenv("DRONE_REPO_BRANCH")
 
 type Plugin struct {
 	OSS       OSS
@@ -84,14 +88,8 @@ func (p *Plugin) FileName() string {
 	}
 
 	if isTemplateName(p.OSS.ObjectName) {
-		commitRef := os.Getenv("DRONE_COMMIT_REF")
-		repoBranch := os.Getenv("DRONE_REPO_BRANCH")
 		if UseDefaultTag(commitRef, repoBranch) {
-			repoTag, err := DefaultTag(commitRef)
-			if err != nil {
-				return p.OSS.ObjectName
-			}
-			return renderName(p.OSS.ObjectName, repoTag, func() time.Time {
+			return renderName(p.OSS.ObjectName, func() time.Time {
 				return time.Now()
 			})
 		}
@@ -107,10 +105,15 @@ func isTemplateName(name string) bool {
 	return len(all) > 0
 }
 
-func renderName(name string, repoTag string, fn func() time.Time) string {
-	tmpl, err := template.New("file_name").Parse(name)
+func renderName(tmplString string, fn func() time.Time) string {
+	repoTag, err := DefaultTag(commitRef)
 	if err != nil {
-		return name
+		log.Println("Warning: ", err)
+		repoTag = ""
+	}
+	tmpl, err := template.New("file_name").Parse(tmplString)
+	if err != nil {
+		return tmplString
 	}
 	var bf bytes.Buffer
 	err = tmpl.Execute(&bf, map[string]interface{}{
@@ -118,7 +121,7 @@ func renderName(name string, repoTag string, fn func() time.Time) string {
 		"tag":  repoTag,
 	})
 	if err != nil {
-		return name
+		return tmplString
 	}
 	return bf.String()
 }
